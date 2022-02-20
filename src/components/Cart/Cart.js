@@ -6,7 +6,8 @@ import CartContext from "../../store/cart-context";
 
 const Cart = (props) => {
   const cartCtx = useContext(CartContext);
-  const totalAmount = cartCtx.totalAmount.toFixed(2);
+  const totalAmount = Math.abs(cartCtx.totalAmount.toFixed(2)); 
+  // Math.abs prevents from total amount of '-0.00' 
   const hasItems = cartCtx.items.length > 0;
 
   const itemRemoveHandler = (id) => {
