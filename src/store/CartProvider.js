@@ -4,6 +4,7 @@ import CartContext from "./cart-context";
 const ACTIONS = {
   ADD_ITEM: "add-item",
   REMOVE_ITEM: "remove-item",
+  DELETE_ITEM: "delete-item",
 };
 
 const defaultCartState = {
@@ -67,6 +68,21 @@ const cartReducer = (state, action) => {
       totalAmount: updatedTotalAmount,
     };
   }
+  if (action.type === ACTIONS.DELETE_ITEM){
+    const existingCartItemIndex = state.items.findIndex(
+      (item) => item.id === action.payload.id
+    );
+    const existingCartItem = state.items[existingCartItemIndex];
+    const updatedTotalAmount = state.totalAmount - existingCartItem.price * existingCartItem.amount;
+
+    const updatedItems = state.items.filter(
+      (item) => item.id !== action.payload.id
+    );
+    return {
+      items: updatedItems,
+      totalAmount: updatedTotalAmount,
+    };
+  }
   return defaultCartState;
 };
 
@@ -82,12 +98,16 @@ const CartProvider = (props) => {
   const removeItemFromCartHandler = (id) => {
     dispatchCartAction({ type: ACTIONS.REMOVE_ITEM, payload: { id: id } });
   };
+  const deleteItemFromCartHandler = (id) => {
+    dispatchCartAction({ type: ACTIONS.DELETE_ITEM, payload: { id: id }});
+  }
 
   const cartContext = {
     items: cartState.items,
     totalAmount: cartState.totalAmount,
     addItem: addItemToCartHandler,
     removeItem: removeItemFromCartHandler,
+    deleteItem: deleteItemFromCartHandler,
   };
 
   return (
