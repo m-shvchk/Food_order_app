@@ -12,21 +12,62 @@ const defaultCartState = {
 };
 
 const cartReducer = (state, action) => {
-  switch (action.type) {
-    case ACTIONS.ADD_ITEM:
-      const updateItems = state.items.concat(action.payload.item);
-      const updatedTotalAmount =
-        state.totalAmount +
-        action.payload.item.price * action.payload.item.amount;
-      return {
-          items: updateItems,
-          totalAmount: updatedTotalAmount,
-      }; 
-    case ACTIONS.REMOVE_ITEM:
-      return {};
-    default:
-      return defaultCartState;
+  if (action.type === ACTIONS.ADD_ITEM) {
+    const updatedTotalAmount =
+      state.totalAmount +
+      action.payload.item.price * action.payload.item.amount;
+    const existingCartItemIndex = state.items.findIndex(
+      (item) => item.id === action.payload.item.id
+    ); // findIndex() returns the index of the first element in the array that satisfies the provided testing function. Otherwise, it returns -1
+    const existingCartItem = state.items[existingCartItemIndex];
+
+    let updatedItems;
+
+    if (existingCartItem) {
+      let updatedItem = {
+        ...existingCartItem,
+        amount: existingCartItem.amount + action.payload.item.amount,
+      };
+      updatedItems = [...state.items];
+      updatedItems[existingCartItemIndex] = updatedItem;
+    } else {
+      updatedItems = state.items.concat(action.payload.item);
+    }
+
+    return {
+      items: updatedItems,
+      totalAmount: updatedTotalAmount,
+    };
   }
+
+  if (action.type === ACTIONS.REMOVE_ITEM) {
+    const existingCartItemIndex = state.items.findIndex(
+      (item) => item.id === action.payload.id
+    );
+    const existingCartItem = state.items[existingCartItemIndex];
+    const updatedTotalAmount = state.totalAmount - existingCartItem.price;
+
+    let updatedItems;
+
+    if (existingCartItem.amount === 1) {
+      updatedItems = state.items.filter(
+        (item) => item.id !== action.payload.id
+      );
+    } else {
+      const updatedItem = {
+        ...existingCartItem,
+        amount: existingCartItem.amount - 1,
+      };
+      updatedItems = [...state.items];
+      updatedItems[existingCartItemIndex] = updatedItem;
+    }
+
+    return {
+      items: updatedItems,
+      totalAmount: updatedTotalAmount,
+    };
+  }
+  return defaultCartState;
 };
 
 const CartProvider = (props) => {
