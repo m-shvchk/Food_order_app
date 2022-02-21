@@ -1,4 +1,4 @@
-import React, { useReducer } from "react";
+import React, { useReducer, useEffect } from "react";
 import CartContext from "./cart-context";
 
 const ACTIONS = {
@@ -7,7 +7,7 @@ const ACTIONS = {
   DELETE_ITEM: "delete-item",
 };
 
-const defaultCartState = {
+const defaultCartState = JSON.parse(localStorage.getItem("cartState")) || {
   items: [],
   totalAmount: 0,
 };
@@ -68,12 +68,13 @@ const cartReducer = (state, action) => {
       totalAmount: updatedTotalAmount,
     };
   }
-  if (action.type === ACTIONS.DELETE_ITEM){
+  if (action.type === ACTIONS.DELETE_ITEM) {
     const existingCartItemIndex = state.items.findIndex(
       (item) => item.id === action.payload.id
     );
     const existingCartItem = state.items[existingCartItemIndex];
-    const updatedTotalAmount = state.totalAmount - existingCartItem.price * existingCartItem.amount;
+    const updatedTotalAmount =
+      state.totalAmount - existingCartItem.price * existingCartItem.amount;
 
     const updatedItems = state.items.filter(
       (item) => item.id !== action.payload.id
@@ -92,6 +93,10 @@ const CartProvider = (props) => {
     defaultCartState
   );
 
+  useEffect(() => {
+    localStorage.setItem("cartState", JSON.stringify(cartState));
+  }, [cartState]);
+
   const addItemToCartHandler = (item) => {
     dispatchCartAction({ type: ACTIONS.ADD_ITEM, payload: { item: item } });
   };
@@ -99,8 +104,8 @@ const CartProvider = (props) => {
     dispatchCartAction({ type: ACTIONS.REMOVE_ITEM, payload: { id: id } });
   };
   const deleteItemFromCartHandler = (id) => {
-    dispatchCartAction({ type: ACTIONS.DELETE_ITEM, payload: { id: id }});
-  }
+    dispatchCartAction({ type: ACTIONS.DELETE_ITEM, payload: { id: id } });
+  };
 
   const cartContext = {
     items: cartState.items,
