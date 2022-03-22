@@ -5,6 +5,7 @@ const ACTIONS = {
   ADD_ITEM: "add-item",
   REMOVE_ITEM: "remove-item",
   DELETE_ITEM: "delete-item",
+  CLEAR: "clear",
 };
 
 const defaultCartState = JSON.parse(localStorage.getItem("cartState")) || {
@@ -84,6 +85,9 @@ const cartReducer = (state, action) => {
       totalAmount: updatedTotalAmount,
     };
   }
+  if (action.type === ACTIONS.CLEAR) {
+    return defaultCartState;
+  }
   return defaultCartState;
 };
 
@@ -106,6 +110,9 @@ const CartProvider = (props) => {
   const deleteItemFromCartHandler = (id) => {
     dispatchCartAction({ type: ACTIONS.DELETE_ITEM, payload: { id: id } });
   };
+  const clearCartHandler = () => {
+    dispatchCartAction({type: ACTIONS.CLEAR})
+  }
 
   const cartContext = {
     items: cartState.items,
@@ -113,6 +120,7 @@ const CartProvider = (props) => {
     addItem: addItemToCartHandler,
     removeItem: removeItemFromCartHandler,
     deleteItem: deleteItemFromCartHandler,
+    clearCart: clearCartHandler,
   };
 
   return (
