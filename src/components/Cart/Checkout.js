@@ -1,99 +1,131 @@
-import React, { useRef, useState } from "react";
+import React from 'react'
 import classes from "./Checkout.module.css";
+import useInput from "../../hooks/use-input";
 
-const isEmpty = (value) => value.trim() === "";
-const isNotFiveChars = (value) => value.trim().length !== 5;
+const isNotEmpty = (value) => value.trim() !== "";
+const isEmail = (value) => value.includes("@");
+const isPhone = (value) => {
+    let re = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/im;
+    return re.test(value);
+}
 
 const Checkout = (props) => {
-  const [formInputsValidity, setFormInputsValidity] = useState({
-    name: true,
-    address: true,
-    postalCode: true,
-    city: true,
-  });
+  const {
+    value: firstNameValue,
+    isValid: firstNameIsValid,
+    hasError: firstNameHasError,
+    valueChangeHandler: firstNameChangeHandler,
+    inputBlurHandler: firstNameBlurHandler,
+    reset: resetFirstName,
+  } = useInput(isNotEmpty);
 
-  const nameInputRef = useRef();
-  const addressInputRef = useRef();
-  const postalInputRef = useRef();
-  const cityInputRef = useRef();
+
+  const {
+    value: lastNameValue,
+    isValid: lastNameIsValid,
+    hasError: lastNameHasError,
+    valueChangeHandler: lastNameChangeHandler,
+    inputBlurHandler: lastNameBlurHandler,
+    reset: resetLastName,
+  } = useInput(isNotEmpty);
+
+  const {
+    value: emailValue,
+    isValid: emailIsValid,
+    hasError: emailHasError,
+    valueChangeHandler: emailChangeHandler,
+    inputBlurHandler: emailBlurHandler,
+    reset: resetEmail,
+  } = useInput(isEmail);
+
+  const {
+    value: phoneValue,
+    isValid: phoneIsValid,
+    hasError: phoneHasError,
+    valueChangeHandler: phoneChangeHandler,
+    inputBlurHandler: phoneBlurHandler,
+    reset: resetPhone,
+  } = useInput(isPhone);
+
+  let formIsValid = false;
+
+  if (firstNameIsValid && lastNameIsValid && emailIsValid && phoneIsValid) {
+    formIsValid = true;
+  }
 
   const confirmHandler = (event) => {
     event.preventDefault();
-    const enteredName = nameInputRef.current.value;
-    const enteredAddress = addressInputRef.current.value;
-    const enteredPostalCode = postalInputRef.current.value;
-    const enteredCity = cityInputRef.current.value;
-
-    const enteredNameIsValid = !isEmpty(enteredName);
-    const enteredAddressIsValid = !isEmpty(enteredAddress);
-    const enteredCityIsValid = !isEmpty(enteredCity);
-    const enteredPostalCodeIsValid = !isNotFiveChars(enteredPostalCode);
-
-    setFormInputsValidity({
-      name: enteredNameIsValid,
-      address: enteredAddressIsValid,
-      postalCode: enteredCityIsValid,
-      city: enteredPostalCodeIsValid,
-    });
-
-    const formIsValid =
-      enteredNameIsValid &&
-      enteredAddressIsValid &&
-      enteredCityIsValid &&
-      enteredPostalCodeIsValid;
-
     if (!formIsValid) {
-      return;
-    }
-    props.onConfirm({
-        name: enteredName,
-        address: enteredAddress,
-        postalCode: enteredPostalCode,
-        city: enteredCity,
-    })
+        return;
+      }
+      props.onConfirm({
+        firstName: firstNameValue,
+        lastName: lastNameValue,
+        email: emailValue,
+        phone: phoneValue,
+      })
 
-  };
+      resetFirstName()
+      resetLastName()
+      resetEmail()
+      resetPhone()
+
+  }
+
+  const firstNameClasses = `${classes.control} ${firstNameHasError ? classes.invalid : ''}`;
+  const lastNameClasses = `${classes.control} ${lastNameHasError ? classes.invalid : ''}`;
+  const emailClasses = `${classes.control} ${emailHasError ? classes.invalid : ''}`;
+  const phoneClasses = `${classes.control} ${phoneHasError ? classes.invalid : ''}`;
+
 
   return (
     <form onSubmit={confirmHandler}>
-      <div className={`${classes.control} ${formInputsValidity.name ? '' : classes.invalid}`}>
-        <label htmlFor="name">Name</label>
+      <div className={firstNameClasses}>
+        <label htmlFor="firstname">First Name</label>
         <input type="text" 
-        id="name" 
-        placeholder="name" 
-        ref={nameInputRef} 
+        id="firstname" 
+        value={firstNameValue}
+        onChange={firstNameChangeHandler}
+        onBlur={firstNameBlurHandler} 
         />
-        {!formInputsValidity.name && <p>'name' field should not be empty</p>}
+        {firstNameHasError && <p>'first name' field should not be empty</p>}
       </div>
-      <div className={`${classes.control} ${formInputsValidity.address ? '' : classes.invalid}`}>
-        <label htmlFor="adress">Adress</label>
+
+      <div className={lastNameClasses}>
+        <label htmlFor="lastname">Last Name</label>
         <input
           type="text"
-          id="adress"
-          placeholder="adress"
-          ref={addressInputRef}
+          id="lastname"
+          value={lastNameValue}
+          onChange={lastNameChangeHandler}
+          onBlur={lastNameBlurHandler}         
         />
-        {!formInputsValidity.address && <p>'address' field should not be empty</p>}
+        {lastNameHasError && <p>'last name' field should not be empty</p>}
       </div>
-      <div className={`${classes.control} ${formInputsValidity.postalCode ? '' : classes.invalid}`}>
-        <label htmlFor="postal">Postal Code</label>
+
+      <div className={emailClasses}>
+        <label htmlFor="email">Email</label>
         <input
           type="text"
-          id="postal"
-          placeholder="postal code"
-          ref={postalInputRef}
+          id="email"
+          value={emailValue}
+          onChange={emailChangeHandler}
+          onBlur={emailBlurHandler}
         />
-        {!formInputsValidity.postalCode && <p>'postal code' field should not be empty</p>}
+        {emailHasError && <p> pleaseenter a valid email</p>}
       </div>
-      <div className={`${classes.control} ${formInputsValidity.city ? '' : classes.invalid}`}>
-        <label htmlFor="city">City</label>
+
+      <div className={phoneClasses}>
+        <label htmlFor="phone">Phone</label>
         <input type="text" 
-        id="city" 
-        placeholder="city" 
-        ref={cityInputRef} 
+        id="phone" 
+        value={phoneValue}
+        onChange={phoneChangeHandler}
+        onBlur={phoneBlurHandler}
         />
-        {!formInputsValidity.city && <p>'city' field should not be empty</p>}
+        {phoneHasError && <p>please enter a valid phone number</p>}
       </div>
+     
       <div className={classes.actions}>
         <button type="button" onClick={props.hideCartHandler}>
           {/* type='button' so that it does not submit the form */}
