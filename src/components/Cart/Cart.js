@@ -6,9 +6,10 @@ import CartContext from "../../store/cart-context";
 import Checkout from "./Checkout";
 
 const Cart = (props) => {
-  const [isCheckout, setIsCheckout] = useState(false);
+  const [isCheckoutForm, setIsCheckoutForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [didSubmit, setDidSubmit] = useState(false);
+  const [error, setError] = useState(null);
 
   const cartCtx = useContext(CartContext);
   const totalAmount = Math.abs(cartCtx.totalAmount.toFixed(2));
@@ -25,23 +26,32 @@ const Cart = (props) => {
     cartCtx.addItem({ ...item, amount: 1 });
   };
   const orderHandler = () => {
-    setIsCheckout(true);
+    setIsCheckoutForm(true);
   };
   const submitOrderHandler = async (userData) => {
     setIsSubmitting(true);
-    await fetch(
+    try{
+    const response = await fetch(
       "https://react-tut-http-839ca-default-rtdb.firebaseio.com/orders.json",
       {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user: userData,
           orderedItems: cartCtx.items,
         }),
       }
     );
+    if(!response.ok){
+      throw new Error("Request failed")
+    }
     setIsSubmitting(false);
     setDidSubmit(true);
     cartCtx.clearCart()
+    } catch (err) {
+      setError(err.message || "Something went wrong")
+      setIsSubmitting(false);
+    }
   };
 
   const cartItems = (
@@ -83,17 +93,19 @@ const Cart = (props) => {
         <span>Total amount</span>
         <span>{totalAmount}</span>
       </div>
-      {isCheckout && (
+      {isCheckoutForm && (
         <Checkout
           onConfirm={submitOrderHandler}
           hideCartHandler={props.hideCartHandler}
         />
       )}
-      {!isCheckout && modalActions}
+      {!isCheckoutForm && modalActions}
     </React.Fragment>
   );
 
   const isSubmittingModalContent = <p>Sending order data...</p>;
+
+  const errorModalContent = <h2 style={{color: 'red'}}>{error}</h2>
 
   const didSubmitModalContent = (
     <React.Fragment>
@@ -108,9 +120,10 @@ const Cart = (props) => {
 
   return (
     <Modal hideCartHandler={props.hideCartHandler}>
-      {!isSubmitting && !didSubmit && cartModalContent}
+      {!isSubmitting && !didSubmit && !error && cartModalContent}
       {isSubmitting && isSubmittingModalContent}
       {!isSubmitting && didSubmit && didSubmitModalContent}
+      {error && errorModalContent}
     </Modal>
   );
 };
